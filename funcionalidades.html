@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Jardim Suspenso — Funcionalidades</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+@page { size: A4; margin: 16mm 15mm; }
+body { font-family: "Nunito", system-ui, sans-serif; color: #1f2e2b; font-size: 10.5pt; line-height: 1.45; margin: 0; }
+h1 { font-family: "Young Serif", Georgia, serif; font-weight: 400; font-size: 30pt; margin: 0; color: #1f2e2b; }
+.sub { color: #4d5f5a; font-weight: 700; margin: 4px 0 18px; }
+.capa { border-radius: 14px; padding: 20px 22px; background: linear-gradient(135deg, #dceefa, #e4f3e6); margin-bottom: 18px; }
+.capa p { margin: 6px 0 0; }
+h2 { font-family: "Young Serif", Georgia, serif; font-weight: 400; font-size: 15pt; margin: 18px 0 6px; color: #2f7d62; border-bottom: 1.5px solid #cfe3d8; padding-bottom: 3px; break-after: avoid; }
+ul { margin: 4px 0; padding-left: 18px; } li { margin: 2px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin: 6px 0; break-inside: auto; }
+th { text-align: left; background: #eef4ef; font-weight: 900; padding: 5px 7px; }
+td { padding: 5px 7px; border-bottom: 1px solid #e3e9e5; vertical-align: top; }
+tr { break-inside: avoid; }
+.pil { font-size: 7.5pt; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; color: #fff; border-radius: 99px; padding: 1px 6px; white-space: nowrap; }
+.comum{background:#7a8a84}.incomum{background:#2f8a5f}.rara{background:#3f67c9}.lendaria{background:#a8559b}
+.nota { font-size: 9pt; color: #4d5f5a; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+b { font-weight: 900; }
+</style></head><body>
+
+<div class="capa">
+  <h1>Jardim Suspenso</h1>
+  <div class="sub">Funcionalidades do app · versão 1 · setembro de 2026</div>
+  <p>Uma ilhota 3D flutuando no céu para plantar, regar e ver crescer com calma. Funciona no navegador do celular ou do computador e salva o progresso no próprio aparelho.</p>
+</div>
+
+<h2>Controles</h2>
+<div class="grid">
+<ul>
+  <li><b>Arrastar</b>: gira a ilha</li>
+  <li><b>Beliscar</b> (ou roda do mouse): aproxima e afasta</li>
+  <li><b>Tocar</b>: interage com plantas, bichos, água, nuvens e objetos</li>
+</ul>
+<ul>
+  <li>Barra de ferramentas: <b>Olhar · Semear · Regar · Decorar · Caderno</b></li>
+  <li>Dicas aparecem na tela conforme você avança</li>
+  <li>A ilha gira devagar sozinha quando fica parada</li>
+</ul>
+</div>
+
+<h2>Plantas</h2>
+<p>São 11 espécies. As 3 primeiras já vêm liberadas; as outras liberam conforme as flores do jardim vão abrindo.</p>
+<table>
+<tr><th>Planta</th><th>Libera com</th><th>Tempo com água</th><th>Detalhe</th></tr>
+<tr><td>Margarida</td><td>Início</td><td>~2 min</td><td>Atrai abelhas</td></tr>
+<tr><td>Tulipa</td><td>Início</td><td>~3 min</td><td>5 cores; atrai beija-flor</td></tr>
+<tr><td>Dente-de-leão</td><td>Início</td><td>~2,5 min</td><td>Toque na bolinha: as sementes voam e nascem mudas novas</td></tr>
+<tr><td>Lavanda</td><td>1 flor</td><td>~4 min</td><td>Favorita das abelhas</td></tr>
+<tr><td>Cogumelo-luminoso</td><td>2 flores</td><td>~3 min</td><td>Brilha à noite e solta esporos luminosos</td></tr>
+<tr><td>Samambaia</td><td>3 flores</td><td>~4 min</td><td>Folhas novas enroladinhas</td></tr>
+<tr><td>Hortênsia</td><td>5 flores</td><td>~5 min</td><td>Azul, rosa ou lilás</td></tr>
+<tr><td>Girassol</td><td>7 flores</td><td>~5 min</td><td>Vira devagar para onde o sol está</td></tr>
+<tr><td>Vitória-régia</td><td>9 flores</td><td>~6 min</td><td>Só nasce no meio do lago</td></tr>
+<tr><td>Cerejeira</td><td>12 flores</td><td>~10 min</td><td>Árvore; solta pétalas cor-de-rosa</td></tr>
+<tr><td>Ipê-amarelo</td><td>16 flores</td><td>~12 min</td><td>Árvore; solta pétalas amarelas</td></tr>
+</table>
+
+<h2>Crescimento e rega</h2>
+<ul>
+  <li>Cada planta passa por broto, crescimento e florada, com animação e som quando abre.</li>
+  <li><b>Regar</b> dá um empurrão na hora e deixa a planta crescendo mais rápido por uns 25 minutos. Segurar o dedo rega continuamente.</li>
+  <li>No modo Regar, gotinhas azuis mostram quem está com sede.</li>
+  <li>As plantas <b>continuam crescendo com o app fechado</b>. Ao voltar, um aviso conta o que cresceu e floresceu.</li>
+  <li>As plantas nunca morrem. Sem água, só crescem mais devagar.</li>
+  <li>Tocar numa planta mostra o nome e quanto ela já cresceu. Tocar numa flor aberta solta pólen; tocar numa árvore faz chover pétalas.</li>
+  <li>O jardim comporta até 70 plantas.</li>
+</ul>
+
+<h2>Visitantes</h2>
+<table>
+<tr><th>Bicho</th><th>Quando aparece</th></tr>
+<tr><td>Carpa koi</td><td>Sempre no lago. Tocar na água chama as carpas.</td></tr>
+<tr><td>Borboleta-azul, monarca e limão</td><td>De dia, com flores abertas. Pousam nas flores.</td></tr>
+<tr><td>Abelha</td><td>De dia, com flores de néctar (margarida, lavanda, girassol, hortênsia)</td></tr>
+<tr><td>Beija-flor</td><td>De dia, com flores em forma de tubo (tulipa, lavanda, hortênsia)</td></tr>
+<tr><td>Joaninha</td><td>De dia, andando entre as plantas</td></tr>
+<tr><td>Sabiá-laranjeira</td><td>Com árvore crescida ou casinha de pássaro. Canta e pousa em objetos.</td></tr>
+<tr><td>Libélula</td><td>Sobre o lago, de dia e sem chuva</td></tr>
+<tr><td>Sapinho</td><td>À noite ou na chuva, na margem ou na vitória-régia. Toque e ele pula na água.</td></tr>
+<tr><td>Vaga-lume</td><td>À noite, sem chuva</td></tr>
+</table>
+<p class="nota">Cada visitante novo aparece num aviso e fica registrado no caderno.</p>
+
+<h2>Tempo, clima e céu</h2>
+<ul>
+  <li>O dia começa na hora real do relógio e passa acelerado: um dia inteiro a cada 14 minutos.</li>
+  <li>Amanhecer, dia, pôr do sol e noite com lua, estrelas e vaga-lumes.</li>
+  <li>Climas: sol, nublado, chuva (rega o jardim sozinha), neblina de manhã e arco-íris depois da chuva.</li>
+  <li><b>Tocar numa nuvem</b> faz chover por alguns segundos.</li>
+  <li>Tocar no relógio mostra o clima atual.</li>
+</ul>
+
+<h2>Decoração</h2>
+<ul>
+  <li>Pedras, pedra de caminho, toco com musgo e banco.</li>
+  <li>Lanterna: acende sozinha à noite; toque para apagar ou acender.</li>
+  <li>Sino dos ventos: toca com o vento e quando você toca nele.</li>
+  <li>Casinha de pássaro: atrai o sabiá.</li>
+  <li>Cristais da sua coleção também podem ser colocados no jardim e brilham à noite.</li>
+  <li>No modo Decorar, tocar num objeto ou planta permite girar ou tirar.</li>
+</ul>
+
+<h2>Cristais</h2>
+<p>Os cristais brotam da terra de tempos em tempos (um brilho com feixe de luz) e às vezes depois da chuva. Ao desenterrar, aparece um cartão com o significado. Cada cristal tem uma nota própria, afinada pelo chakra, tocada como tigela tibetana.</p>
+<table>
+<tr><th>Cristal</th><th>Raridade</th><th>Palavra</th><th>Chakra</th><th>Elemento</th></tr>
+<tr><td>Quartzo transparente</td><td><span class="pil comum">Comum</span></td><td>Clareza</td><td>Coroa</td><td>Todos</td></tr>
+<tr><td>Quartzo rosa</td><td><span class="pil comum">Comum</span></td><td>Amor</td><td>Cardíaco</td><td>Água</td></tr>
+<tr><td>Ametista</td><td><span class="pil comum">Comum</span></td><td>Calma</td><td>Coroa</td><td>Ar</td></tr>
+<tr><td>Turmalina negra</td><td><span class="pil comum">Comum</span></td><td>Proteção</td><td>Raiz</td><td>Terra</td></tr>
+<tr><td>Citrino</td><td><span class="pil incomum">Incomum</span></td><td>Alegria</td><td>Plexo solar</td><td>Fogo</td></tr>
+<tr><td>Água-marinha</td><td><span class="pil incomum">Incomum</span></td><td>Serenidade</td><td>Laríngeo</td><td>Água</td></tr>
+<tr><td>Selenita</td><td><span class="pil incomum">Incomum</span></td><td>Paz</td><td>Coroa</td><td>Ar</td></tr>
+<tr><td>Olho de tigre</td><td><span class="pil incomum">Incomum</span></td><td>Coragem</td><td>Plexo solar</td><td>Fogo e terra</td></tr>
+<tr><td>Jade</td><td><span class="pil incomum">Incomum</span></td><td>Harmonia</td><td>Cardíaco</td><td>Terra</td></tr>
+<tr><td>Pirita</td><td><span class="pil incomum">Incomum</span></td><td>Abundância</td><td>Plexo solar</td><td>Fogo</td></tr>
+<tr><td>Pedra-da-lua</td><td><span class="pil rara">Rara</span></td><td>Intuição</td><td>Sacro</td><td>Água</td></tr>
+<tr><td>Lápis-lazúli</td><td><span class="pil rara">Rara</span></td><td>Sabedoria</td><td>Terceiro olho</td><td>Água</td></tr>
+<tr><td>Fluorita</td><td><span class="pil rara">Rara</span></td><td>Foco</td><td>Terceiro olho</td><td>Ar</td></tr>
+<tr><td>Malaquita</td><td><span class="pil rara">Rara</span></td><td>Transformação</td><td>Cardíaco</td><td>Terra</td></tr>
+<tr><td>Labradorita</td><td><span class="pil lendaria">Lendária</span></td><td>Magia</td><td>Laríngeo</td><td>Água</td></tr>
+<tr><td>Opala</td><td><span class="pil lendaria">Lendária</span></td><td>Esperança</td><td>Coroa</td><td>Água</td></tr>
+</table>
+<p class="nota">Os significados seguem a tradição popular dos cristais. O primeiro cristal é sempre uma ametista, e o jogo favorece cristais que você ainda não tem.</p>
+
+<h2>Caderno do jardim</h2>
+<ul>
+  <li>Três abas: <b>Plantas</b>, <b>Cristais</b> e <b>Visitantes</b>, com contagem do que já foi descoberto.</li>
+  <li>Plantas: curiosidade, quantas vezes floresceu e quanto falta para liberar.</li>
+  <li>Cristais: significado completo, chakra, elemento, dica de uso e quantos estão no jardim.</li>
+  <li>Visitantes: curiosidade de cada bicho, ou uma pista de como atrair os que faltam.</li>
+</ul>
+
+<h2>Som</h2>
+<ul>
+  <li>Ambiente: vento, cascata, chuva, pássaros de dia, grilos e coruja à noite.</li>
+  <li>Música ambiente calma, gerada na hora.</li>
+  <li>Sons de plantar, regar, florir e desenterrar, sino dos ventos, canto do sabiá, sapinho e tigelas dos cristais.</li>
+  <li>Botões separados para som e música.</li>
+</ul>
+
+<h2>Visual e técnica</h2>
+<ul>
+  <li>Ilha 3D com lago, riacho, cascata caindo no céu, raízes, cipós e ilhotas soltas sobre um mar de nuvens.</li>
+  <li>Sombras suaves, brilho nas luzes, reflexos na água, ondinhas ao tocar e desfoque de maquete nas bordas.</li>
+  <li>Qualidade ajustada sozinha se o aparelho ficar lento. A tela não apaga enquanto o jogo está aberto.</li>
+  <li>Progresso salvo automaticamente no navegador.</li>
+</ul>
+
+</body></html>

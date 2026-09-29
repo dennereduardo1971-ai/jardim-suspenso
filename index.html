@@ -681,7 +681,9 @@ Object.assign(sol.shadow.camera, { left: -9.5, right: 9.5, top: 9.5, bottom: -9.
 sol.shadow.bias = -0.0006;
 sol.shadow.normalBias = 0.035;
 scene.add(sol, sol.target);
-const luzesLanterna = [0, 1, 2].map(() => { const l = new THREE.PointLight(0xffb45a, 0, 5, 2); scene.add(l); return l; });
+// Poucas luzes de verdade (cada uma pesa em todos os pixels); vão para as lanternas mais perto da câmera.
+// Toda lanterna acesa também ganha uma poça de luz no chão, que é leve e não tem limite.
+const luzesLanterna = Array.from({ length: MOVEL ? 3 : 4 }, () => { const l = new THREE.PointLight(0xffb45a, 0, 5, 2); scene.add(l); return l; });
 
 /* =========================================================
    Kit de modelagem (junta várias peças numa geometria só)
@@ -1372,7 +1374,29 @@ function modeloPlanta(e, s) {
    Modelos de decoração
    ========================================================= */
 const pedraCor = (base, amt = 0.16) => (lx, ly, lz, x, y, z, iv) => jit(base, amt, (iv / 3) | 0);
-const MAT_LANT_ACESA = new THREE.MeshStandardMaterial({ vertexColors: true, emissive: lin('#ffb14a').clone(), emissiveIntensity: 0.2, roughness: 0.5 });
+const MAT_LANT_ACESA = new THREE.MeshStandardMaterial({ vertexColors: true, emissive: lin('#ffb14a').clone(), emissiveIntensity: 0.7, roughness: 0.5 });
+const U_LANT = { value: 0 };
+const matPocaLuz = new THREE.ShaderMaterial({
+  uniforms: { uForca: U_LANT, uCor: { value: lin('#ffb45a').clone() } },
+  vertexShader: VERT_UV,
+  fragmentShader: `uniform float uForca; uniform vec3 uCor; varying vec2 vUv;
+    void main(){ float d = length(vUv); float a = pow(max(0.0, 1.0 - d), 2.2) * uForca; if (a < 0.003) discard; gl_FragColor = vec4(uCor * a * 0.55, 1.0); }`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, side: THREE.DoubleSide, fog: false,
+});
+// Disco que acompanha o relevo em volta da lanterna (uv = deslocamento normalizado pelo raio)
+function geoPocaLuz(cx, cz, R = 1.5, n = 14) {
+  const pos = [], uv = [], idx = [];
+  for (let i = 0; i <= n; i++) for (let j = 0; j <= n; j++) {
+    const u = i / n * 2 - 1, v = j / n * 2 - 1, x = cx + u * R, z = cz + v * R;
+    pos.push(x, Math.max(hTerreno(x, z), NIVEL) + 0.025, z); uv.push(u, v);
+  }
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { const a = i * (n + 1) + j, b = a + n + 1; idx.push(a, a + 1, b, a + 1, b + 1, b); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx); g.computeBoundingSphere();
+  return g;
+}
 const MAT_LANT_APAGADA = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, color: lin('#cfc6b4').clone() });
 const _decModelos = new Map();
 function modeloDecor(t) {
@@ -1706,6 +1730,7 @@ const gotas = Array.from({ length: NCH }, () => ({ x: rnd(-14, 14), y: rnd(-9, 1
    ========================================================= */
 const _agora = new Date();
 let hora = _agora.getHours() + _agora.getMinutes() / 60;
+{ const qh = parseFloat(new URLSearchParams(location.search).get('hora')); if (qh >= 0 && qh < 24) hora = qh; } // ?hora=22 para testar a noite
 const HORAS_SEG = 24 / (14 * 60);              // um dia inteiro a cada 14 minutos
 let noite = 0, chuva = 0, nuvens = 0.25, neblina = 0, vento = 0.7, arco = 0;
 let clima = 'sol', proxClima = rnd(150, 240), chuvaForcada = 0, arcoT = 0, chuvaAntes = 0;
@@ -1867,7 +1892,10 @@ class Decor {
     } else {
       const m = this.m = modeloDecor(d.t);
       const b = new THREE.Mesh(m.base, MAT.solido); b.castShadow = b.receiveShadow = true; G.add(b);
-      if (m.luz) { this.aceso = d.aceso !== false; this.luz = new THREE.Mesh(m.luz, this.aceso ? MAT_LANT_ACESA : MAT_LANT_APAGADA); G.add(this.luz); }
+      if (m.luz) {
+        this.aceso = d.aceso !== false; this.luz = new THREE.Mesh(m.luz, this.aceso ? MAT_LANT_ACESA : MAT_LANT_APAGADA); G.add(this.luz);
+        this.poca = new THREE.Mesh(geoPocaLuz(d.x, d.z), matPocaLuz); this.poca.renderOrder = 1; this.poca.visible = this.aceso; scene.add(this.poca);
+      }
       if (m.tubos) { this.tubos = new THREE.Mesh(m.tubos, MAT.metal); this.tubos.position.copy(m.pivo); this.tubos.castShadow = true; G.add(this.tubos); }
       this.raio = DEC[d.t].raio; this.hitR = m.hitR; this.hitY = m.hitY;
     }
@@ -1896,7 +1924,8 @@ class Decor {
       emite(SA, { x: this.d.x + rnd(-0.15, 0.15), y: this.G.position.y + rnd(0.08, this.alt), z: this.d.z + rnd(-0.15, 0.15), vy: 0.05, vida: 0.9, tam: rnd(0.08, 0.16), cor: lin(c.brilho), forca: 2.5, arrasto: 1, sai: 0.6 });
     }
   }
-  remove() { this.vivo = false; scene.remove(this.G); }
+  remove() { this.vivo = false; scene.remove(this.G); if (this.poca) { scene.remove(this.poca); this.poca.geometry.dispose(); } }
+  acende(on) { this.aceso = on; this.d.aceso = on; this.luz.material = on ? MAT_LANT_ACESA : MAT_LANT_APAGADA; this.poca.visible = on; }
 }
 function criaDecor(d) { const o = new Decor(d); decors.push(o); return o; }
 function removeDecor(o) {
@@ -2509,7 +2538,8 @@ function aplicaCeu() {
   matRiacho.uniforms.uLuz.value = matQueda.uniforms.uLuz.value = matQueda2.uniforms.uLuz.value = luzAgua;
   for (const m of matsBrilho) m.emissiveIntensity = 0.25 + noite * 3.2;
   for (const id in matsCristal) matsCristal[id].emissiveIntensity = 0.05 + noite * 1.1;
-  MAT_LANT_ACESA.emissiveIntensity = 0.15 + noite * 4.5;
+  MAT_LANT_ACESA.emissiveIntensity = 0.7 + noite * 4;
+  U_LANT.value = noite * (1 - chuva * 0.3);
   matBrilhoGeodo.emissiveIntensity = 1.4 + noite * 2.5;
   brilhoVaga = suave((noite - 0.4) / 0.4) * (1 - chuva);
   chuvaMat.opacity = chuva * 0.42;
@@ -2861,7 +2891,10 @@ function iconeCristal(c) {
    ========================================================= */
 let ferramenta = 'mao', comecou = false;
 const sel = { semente: null, decor: null };
+const avisosGuardados = [];
 function aviso(rotulo, texto, icone) {
+  // Na tela de abertura o aviso ficaria escondido atrás dela e se perderia: guarda para depois
+  if (!comecou) { if (avisosGuardados.length < 4) avisosGuardados.push([rotulo, texto, icone]); return; }
   const el = document.createElement('div');
   el.className = 'aviso vidro';
   el.innerHTML = (icone ? '<span class="ic">' + icone + '</span>' : '') + '<div><small>' + rotulo + '</small>' + texto + '</div>';
@@ -2879,7 +2912,7 @@ function atualizaDica() {
   else if (!dados.dicas.semeou) t = 'Toque em Semear para plantar';
   else if (!dados.dicas.regou) t = 'Agora toque em Regar e dê água às mudas';
   else if (geodos.length && !dados.dicas.cavou) t = 'Algo brilha na terra. Toque para desenterrar';
-  else if (!dados.dicas.girou) t = 'Arraste para girar a ilha. Belisque para aproximar';
+  else if (!dados.dicas.girou) t = MOVEL ? 'Arraste para girar a ilha. Belisque para aproximar' : 'Arraste para girar a ilha. Use a rodinha para aproximar';
   el.textContent = t; el.hidden = !t;
 }
 function abreBandeja(tipo) {
@@ -2923,6 +2956,32 @@ function abreBandeja(tipo) {
   $('bandeja').hidden = false; document.body.classList.add('com-bandeja');
 }
 function fechaBandeja() { $('bandeja').hidden = true; document.body.classList.remove('com-bandeja'); }
+// No computador a lista também rola com a rodinha e arrastando com o mouse (no celular o dedo já resolve)
+(() => {
+  const lista = $('bandejaLista');
+  lista.addEventListener('wheel', e => {
+    const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (!d || lista.scrollWidth <= lista.clientWidth) return;
+    e.preventDefault();
+    lista.scrollLeft += d * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? lista.clientWidth : 1);
+  }, { passive: false });
+  let arr = null, arrastou = false;
+  lista.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    arr = { x: e.clientX, s: lista.scrollLeft, id: e.pointerId }; arrastou = false;
+  });
+  lista.addEventListener('pointermove', e => {
+    if (!arr || e.pointerId !== arr.id) return;
+    const dx = e.clientX - arr.x;
+    if (!arrastou && Math.abs(dx) > 6) { arrastou = true; lista.style.scrollSnapType = 'none'; try { lista.setPointerCapture(e.pointerId); } catch (err) {} }
+    if (arrastou) lista.scrollLeft = arr.s - dx;
+  });
+  const solta = () => { if (!arr) return; arr = null; lista.style.scrollSnapType = ''; };
+  lista.addEventListener('pointerup', solta);
+  lista.addEventListener('pointercancel', solta);
+  // Depois de arrastar, o clique que vem junto não escolhe a carta
+  lista.addEventListener('click', e => { if (arrastou) { e.stopPropagation(); e.preventDefault(); arrastou = false; } }, true);
+})();
 function escolheFerramenta(f) {
   if (f === 'caderno') { abreCaderno(); return; }
   ferramenta = f;
@@ -3015,7 +3074,8 @@ function mostraAchado(id, novo) {
   $('achado').hidden = false;
   dados.dicas.cavou = true; atualizaDica();
 }
-$('achGuardar').onclick = () => { $('achado').hidden = true; Som.clique(); };
+$('achado').addEventListener('click', e => { if (e.target.id === 'achado') $('achado').hidden = true; });
+$('achGuardar').onclick =() => { $('achado').hidden = true; Som.clique(); };
 $('achColocar').onclick = () => { $('achado').hidden = true; sel.decor = { t: 'cristal', c: achadoAtual }; escolheFerramenta('decorar'); };
 
 // HUD
@@ -3235,7 +3295,11 @@ function tocaDecor(o) {
     explode(o.G.position.clone().add(V(0, 0.25, 0)), [c.brilho, '#ffffff'], 12, { vel: 0.5, vida: 1.2, tam: 0.1, grav: -0.2, forca: 2.6 });
     const el = mostraBolha(o.G.position.clone().add(V(0, 0.55, 0)), `<h4>${c.nome}</h4><p>${c.palavra} · chakra ${c.chakra}</p><div class="bolha-bts"><button class="bt forte" data-a="ler">Ler o significado</button></div>`, 6);
     el.querySelector('[data-a=ler]').onclick = () => abreCaderno('cristais', c.id);
-  } else if (o.d.t === 'lanterna') { o.aceso = !o.aceso; o.d.aceso = o.aceso; o.luz.material = o.aceso ? MAT_LANT_ACESA : MAT_LANT_APAGADA; Som.lanterna(o.aceso); salvar(); }
+  } else if (o.d.t === 'lanterna') {
+    o.acende(!o.aceso); Som.lanterna(o.aceso); salvar();
+    const txt = o.aceso ? (noite > 0.3 ? 'Acesa' : 'Acesa · brilha mais quando escurecer') : 'Apagada';
+    mostraBolha(o.G.position.clone().add(V(0, 1, 0)), `<h4>Lanterna</h4><p>${txt}</p>`, 2);
+  }
   else if (o.d.t === 'sino') { o.toca = 1; Som.sino(1); }
   else if (o.d.t === 'casinha') Som.piu(1);
   else Som.notaPlanta(3);
@@ -3285,7 +3349,7 @@ function rega(p, comSom) {
    Início
    ========================================================= */
 for (const d of dados.plantas) if (ESP[d.e]) plantas.push(new Planta(d));
-for (const d of dados.decor) if (d.t === 'cristal' ? CRI[d.c] : DEC[d.t]) decors.push(new Decor(d));
+for (const d of dados.decor || []) if (d.t === 'cristal' ? CRI[d.c] : DEC[d.t]) decors.push(new Decor(d));
 for (const g of dados.geodos || []) geodos.push(new Geodo(g.x, g.z));
 dados.espFlor = dados.espFlor || {}; dados.dicas = dados.dicas || {}; dados.cristais = dados.cristais || {}; dados.visitantes = dados.visitantes || { koi: true };
 const resumoFora = (() => {
@@ -3344,6 +3408,7 @@ $('entrar').addEventListener('click', () => {
       if (resumoFora.novos) setTimeout(() => aviso('Algo brilha na terra', 'Toque para desenterrar', iconeCristal(CRI.quartzo)), 1400);
     } else aviso('Bem-vindo', dados.floridas || dados.dicas.semeou ? 'Seu jardim estava esperando' : 'Esta ilhota agora é sua', iconeEspecie('margarida'));
     if (novasOffline.length) setTimeout(() => aviso('Nova semente', novasOffline.join(', '), iconeEspecie('lavanda')), 2800);
+    avisosGuardados.splice(0).forEach((a, i) => setTimeout(() => aviso(...a), 4200 + i * 1500));
     atualizaDica();
   }, 700);
 });
@@ -3398,7 +3463,10 @@ function quadro() {
   for (let i = bichos.length - 1; i >= 0; i--) if (bichos[i].morto) { scene.remove(bichos[i].G); bichos.splice(i, 1); }
 
   let li = 0;
-  for (const o of decors) if (o.luz && o.aceso && li < luzesLanterna.length) {
+  const acesas = decors.filter(o => o.luz && o.aceso);
+  if (acesas.length > luzesLanterna.length) acesas.sort((a, b) => camera.position.distanceToSquared(a.G.position) - camera.position.distanceToSquared(b.G.position));
+  for (const o of acesas) {
+    if (li >= luzesLanterna.length) break;
     const L = luzesLanterna[li++];
     o.G.localToWorld(L.position.copy(o.m.luzPos));
     L.intensity = noite * 1.8 * (0.92 + 0.08 * Math.sin(t * 13 + o.fase) * Math.sin(t * 7.3));
